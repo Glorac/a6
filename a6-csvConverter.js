@@ -1,37 +1,48 @@
 /**
  * a6-CsvConverter.js
- * @author: @MatthewEckart
- * @description: A script that converts a CSV file into JSON format.
+ * @author @MatthewEckart
+ * @file A script that converts a CSV file into JSON format.
  */
 
 /**
- * @class csvConverter
- * Contains methods for converting CSV files to other data outputs.
+ * @class CsvConverter
+ * @summary Contains methods for converting CSV files to other data outputs.
  */
 class CsvConverter {
-	// Set up converter by passing Header values.
+	/**
+	 * @constructs CsvConverter
+	 * @param {array} headers - an array of header values to use for this CsvConverter.
+	 */
 	constructor(headers) {
 		if (!this.headers) this.headers = headers;
 		this.lineCount = 0;
 		this.overflow = null;
-	}	
+	}
 	
-	// Set Header values.
+	/** 
+	 * @summary Sets the headers for this CsvConverter.
+	 * @param {array} headers - an array of header values.
+	 */
 	setHeaders(headers) {
 		this.headers = headers;
 	}
 	
-	// Return Header values.
+	/** @returns {array} headers */
 	getHeaders() {
 		return this.headers;
 	}
 	
-	// Return lines processed.
+	/** @returns {number} number of lines processed */
 	getLineCount() {
 		return this.lineCount;
 	}
 	
-	// Convert data to JSON format.
+	/**
+	 * @summary Takes CSV data and converts it to JSON.
+	 * @param {buffer} data - the CSV data to process.
+	 * @param {number} skipRows - the number of rows to skip from the beginning of the data. 0 if null.
+	 * @returns {string} a string of JSON data.
+	 */
 	toJSON(data, skipRows) {
 		// If Headers have not been set, return null.
 		if (!this.headers) return null;
@@ -73,7 +84,12 @@ class CsvConverter {
 		return jsonString;
 	}
 	
-	// Convert data to XML format.
+	/**
+	 * @summary Takes CSV data and converts it to XML. Data should be enclosed by <document> tags externally.
+	 * @param {buffer} data - the CSV data to process.
+	 * @param {number} skipRows - the number of rows to skip from the beginning of the data. 0 if null.
+	 * @returns {string} A string of XML data.
+	 */
 	toXML(data, skipRows) {
 		// If Headers have not been set, return null.
 		if (!this.headers) return null;
@@ -116,7 +132,11 @@ class CsvConverter {
 		return xml;
 	}
 	
-	// Convert data to TSV format.
+	/**
+	 * @summary Takes CSV data and converts it to TSV. Does not update lineCount.
+	 * @param {buffer} data - the CSV data to process.
+	 * @returns {string} A string of TSV data.
+	 */
 	toTSV(data) {
 		return data.toString().replaceAll(',', '\t');
 	}

@@ -1,7 +1,7 @@
 /**
  * a6-script.js
- * @author: @MatthewEckart
- * @description: A script that converts a CSV file into JSON format.
+ * @author @MatthewEckart
+ * @file A script that converts a CSV file into JSON format.
  */
 
 // Load relevant modules.
