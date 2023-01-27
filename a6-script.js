@@ -48,9 +48,7 @@ const csvToJSON = async function (csvPath, jsonPath) {
 					data_start = false;
 					
 					json = converter.toJSON(d, 1);
-				} else {
-					json = converter.toJSON(d);
-				}
+				} else json = converter.toJSON(d);
 				
 				// Write to JSON file.
 				if (json) {
@@ -68,27 +66,34 @@ const csvToJSON = async function (csvPath, jsonPath) {
 			const lineCount = converter.getLineCount();
 			console.log(`\nThe operation has completed, and a JSON file has been written to ${jsonPath}.`);
 			console.log(`${lineCount} lines were processed over ${processTime} milliseconds.`);
-			
-			process.exit(0);
+			end();
 		});
 
 		// Log Errors
 		// (end not-so-gracefully)
 		readStream.on('error', e => {
-			console.log(e);
-			console.log("\nLooks like that didn't go quite according to plan...");
-			process.exit(1);
+			end(e);
 		});
 		writeStream.on('error', e => {
-			console.log(e);
-			console.log("\nLooks like that didn't go quite according to plan...");
-			process.exit(1);
+			end(e);
 		});
 	} catch (e) {
+		end(e);
+	}
+}
+
+/**
+ * @function end
+ * Ends and exists the process.
+ * @param {error} e - any errors that may have caused the process to end.
+ */
+const end = function (e) {
+	if (e) {
 		console.log(e); 
 		console.log("\nLooks like that didn't go quite according to plan...");
 		process.exit(1);
 	}
+	process.exit(0);
 }
 
 // Run script.
