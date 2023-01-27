@@ -7,76 +7,7 @@
 // Load relevant modules.
 const fs = require('fs');
 const rl = require('readline').createInterface({ input: process.stdin, output: process.stdout });
-
-/**
- * @class csvToJsonConverter
- * Contains methods for converting CSV files to JSON output.
- */
-class csvToJsonConverter {
-	// Set up converter by passing Header values.
-	constructor(headers) {
-		if (!this.headers) this.headers = headers;
-		this.lineCount = 0;
-		this.overflow = null;
-	}
-	
-	// Parse data as it is passed.
-	parseData(data, skipRows) {
-		// If Headers have not been set, return null.
-		if (!this.headers) return null;
-		
-		// Set row skip default.
-		if (!skipRows) skipRows = 0;
-	
-		// Initialize objects to hold formatted data.
-		let json = {};
-		let jsonString = '';
-		
-		// Seperate rows.
-		let rows = data.toString().split('\n');
-		
-		// Loop through rows, converting data to JSON.
-		for (let i = skipRows; i < rows.length; i++) {		
-			// Check for overflow data from previous chunk and reset overflow.
-			if (this.overflow) {
-				rows[i] = this.overflow + rows[i];
-				this.overflow = null;
-			}
-		
-			// Grab comma-separated values and validate against headers.
-			let values = rows[i].split(',');
-			if (values.length == this.headers.length) {				
-				// Loop through columns.
-				for (let j = 0; j < this.headers.length; j++) {
-					json[this.headers[j]] = values[j];
-				}
-				
-				jsonString = jsonString + JSON.stringify(json);
-				this.lineCount++;
-			} else {
-				// Store overflow data for the next chunk.
-				this.overflow = rows[i];
-			}
-		}
-		
-		return jsonString;
-	}
-	
-	// Set Header values.
-	setHeaders(headers) {
-		this.headers = headers;
-	}
-	
-	// Return Header values.
-	getHeaders() {
-		return this.headers;
-	}
-	
-	// Return lines processed.
-	getLineCount() {
-		return this.lineCount;
-	}
-}
+const csvConverter = require('./a6-csvConverter')
 
 /**
  * @function csvToJson
@@ -98,7 +29,7 @@ const csvToJSON = async function (csvPath, jsonPath) {
 		// Initialize
 		const readStream = fs.createReadStream(csvPath);
 		const writeStream = fs.createWriteStream(jsonPath);
-		const converter = new csvToJsonConverter();
+		const converter = new csvConverter();
 		const startTime = new Date().getTime();
 		let data_start = true;
 		
@@ -116,9 +47,9 @@ const csvToJSON = async function (csvPath, jsonPath) {
 					converter.setHeaders(headers);
 					data_start = false;
 					
-					json = converter.parseData(d, 1);
+					json = converter.toJSON(d, 1);
 				} else {
-					json = converter.parseData(d);
+					json = converter.toJSON(d);
 				}
 				
 				// Write to JSON file.
