@@ -1,0 +1,19 @@
+{
+  "name": "a6",
+  "version": "1.0.0",
+  "description": "A package designed to convert CSV files to other data formats.",
+  "main": "a6-script.js",
+  "scripts": {
+    "test": "n/a"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Glorac/a6.git"
+  },
+  "author": "Matthew Eckart",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Glorac/a6/issues"
+  },
+  "homepage": "https://github.com/Glorac/a6#readme"
+}
