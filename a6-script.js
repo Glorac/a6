@@ -11,7 +11,7 @@ const csvConverter = require('./a6-csvConverter')
 
 /**
  * @function csvToJson
- * Converts a CSV file to a file containing JSON data.
+ * @summary Converts a CSV file to a file containing JSON data.
  * @param {string} csvPath - the path to the source CSV file
  * @param {string} jsonPath - the path at which JSON data should be output
  * If csvPath or jsonPath are not provided via parameters, the user will be prompted to input them.
@@ -84,7 +84,7 @@ const csvToJSON = async function (csvPath, jsonPath) {
 
 /**
  * @function end
- * Ends and exists the process.
+ * @summary Ends and exits the process.
  * @param {error} e - any errors that may have caused the process to end.
  */
 const end = function (e) {
