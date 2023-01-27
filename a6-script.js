@@ -1,6 +1,82 @@
+/**
+ * a6-script.js
+ * @author: @MatthewEckart
+ * @description: A script that converts a CSV file into JSON format.
+ */
+
 // Load relevant modules.
 const fs = require('fs');
 const rl = require('readline').createInterface({ input: process.stdin, output: process.stdout });
+
+/**
+ * @class csvToJsonConverter
+ * Contains methods for converting CSV files to JSON output.
+ */
+class csvToJsonConverter {
+	// Set up converter by passing Header values.
+	constructor(headers) {
+		if (!this.headers) this.headers = headers;
+		this.lineCount = 0;
+		this.overflow = null;
+	}
+	
+	// Parse data as it is passed.
+	parseData(data, skipRows) {
+		// If Headers have not been set, return null.
+		if (!this.headers) return null;
+		
+		// Set row skip default.
+		if (!skipRows) skipRows = 0;
+	
+		// Initialize objects to hold formatted data.
+		let json = {};
+		let jsonString = '';
+		
+		// Seperate rows.
+		let rows = data.toString().split('\n');
+		
+		// Loop through rows, converting data to JSON.
+		for (let i = skipRows; i < rows.length; i++) {		
+			// Check for overflow data from previous chunk and reset overflow.
+			if (this.overflow) {
+				rows[i] = this.overflow + rows[i];
+				this.overflow = null;
+			}
+		
+			// Grab comma-separated values and validate against headers.
+			let values = rows[i].split(',');
+			if (values.length == this.headers.length) {				
+				// Loop through columns.
+				for (let j = 0; j < this.headers.length; j++) {
+					json[this.headers[j]] = values[j];
+				}
+				
+				jsonString = jsonString + JSON.stringify(json);
+				this.lineCount++;
+			} else {
+				// Store overflow data for the next chunk.
+				this.overflow = rows[i];
+			}
+		}
+		
+		return jsonString;
+	}
+	
+	// Set Header values.
+	setHeaders(headers) {
+		this.headers = headers;
+	}
+	
+	// Return Header values.
+	getHeaders() {
+		return this.headers;
+	}
+	
+	// Return lines processed.
+	getLineCount() {
+		return this.lineCount;
+	}
+}
 
 /**
  * @function csvToJson
@@ -10,7 +86,7 @@ const rl = require('readline').createInterface({ input: process.stdin, output: p
  * If csvPath or jsonPath are not provided via parameters, the user will be prompted to input them.
  * @requires fs
  * @requires readline
-*/
+ */
 const csvToJSON = async function (csvPath, jsonPath) {
 	// Prompt user for file paths if they are not passed into the function.
 	if (!csvPath)
@@ -22,62 +98,43 @@ const csvToJSON = async function (csvPath, jsonPath) {
 		// Initialize
 		const readStream = fs.createReadStream(csvPath);
 		const writeStream = fs.createWriteStream(jsonPath);
+		const converter = new csvToJsonConverter();
 		const startTime = new Date().getTime();
 		let data_start = true;
-		let headers, overflow;
-		let lineCount = 0;
 		
-		// Read the CSV file.
-		readStream.on('data', d => {		
-			// Parse Rows
-			let rows = d.toString().split('\n');
+		// Read the CSV file as data enters buffer.
+		readStream.on('readable', () => {		
+			let d;
 			
-			// Grab Headers
-			if (data_start) headers = rows[0].split(',');
-		
-			// Loop through rows, converting data to JSON.
-			for (let i = 0; i < rows.length; i++) {
-				// Shift down a row if just beginning to process.
-				if (data_start && i == 0) { i = 1 }				
+			// Loop while data exists in buffer.
+			while (null !== (d = readStream.read())) {
+				let json;
 			
-				// Check for overflow data from previous chunk and reset overflow.
-				if (overflow) {
-					rows[i] = overflow + rows[i];
-					overflow = false;
-				}
-			
-				// Grab comma-separated values and validate against headers.
-				let values = rows[i].split(',');
-				if (values.length == headers.length) {
-					// Initialize object to hold formatted data.
-					let json = {};
+				// Grab Headers and initialize Converter Object.
+				if (data_start) {
+					let headers = d.toString().split('\n')[0].split(',');
+					converter.setHeaders(headers);
+					data_start = false;
 					
-					// Loop through columns.
-					for (let j = 0; j < headers.length; j++) {
-						json[headers[j]] = values[j];
-						if (!values[j] || values[j] == '') console.log(rows[i]);
-					}
+					json = converter.parseData(d, 1);
+				} else {
+					json = converter.parseData(d);
+				}
 				
-					// Write to JSON file.
-					writeStream.write(JSON.stringify(json), (err) => {
+				// Write to JSON file.
+				if (json) {
+					writeStream.write(json, (err) => {
 						if (err) console.log(err);
 					});
-					
-					lineCount++;
-				} else {
-					// Store overflow data for the next chunk.
-					overflow = rows[i];
 				}
 			}
-		
-			// End Header checking
-			if (data_start) data_start = false;
 		});
 
 		// End gracefully.
 		readStream.on('end', () => {
 			const endTime = new Date().getTime();
 			const processTime = endTime - startTime;
+			const lineCount = converter.getLineCount();
 			console.log(`\nThe operation has completed, and a JSON file has been written to ${jsonPath}.`);
 			console.log(`${lineCount} lines were processed over ${processTime} milliseconds.`);
 			
