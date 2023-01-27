@@ -16,18 +16,27 @@ class csvToJsonConverter {
 	// Set up converter by passing Header values.
 	constructor(headers) {
 		if (!this.headers) this.headers = headers;
+		this.lineCount = 0;
+		this.overflow = null;
 	}
 	
 	// Parse data as it is passed.
-	parseData(data) {
-		// Initialize object to hold formatted data.
+	parseData(data, skipRows) {
+		// If Headers have not been set, return null.
+		if (!this.headers) return null;
+		
+		// Set row skip default.
+		if (!skipRows) skipRows = 0;
+	
+		// Initialize objects to hold formatted data.
 		let json = {};
+		let jsonString = '';
 		
 		// Seperate rows.
-		let rows = d.toString().split('\n');
+		let rows = data.toString().split('\n');
 		
 		// Loop through rows, converting data to JSON.
-		for (let i = 0; i < rows.length; i++) {		
+		for (let i = skipRows; i < rows.length; i++) {		
 			// Check for overflow data from previous chunk and reset overflow.
 			if (this.overflow) {
 				rows[i] = this.overflow + rows[i];
@@ -40,27 +49,32 @@ class csvToJsonConverter {
 				// Loop through columns.
 				for (let j = 0; j < this.headers.length; j++) {
 					json[this.headers[j]] = values[j];
-					if (!values[j] || values[j] == '') console.log(rows[i]);
 				}
 				
-				lineCount++;
+				jsonString = jsonString + JSON.stringify(json);
+				this.lineCount++;
 			} else {
 				// Store overflow data for the next chunk.
 				this.overflow = rows[i];
 			}
 		}
 		
-		return json;
+		return jsonString;
 	}
 	
 	// Set Header values.
-	setHeaders(deaders) {
+	setHeaders(headers) {
 		this.headers = headers;
 	}
 	
 	// Return Header values.
 	getHeaders() {
 		return this.headers;
+	}
+	
+	// Return lines processed.
+	getLineCount() {
+		return this.lineCount;
 	}
 }
 
@@ -193,27 +207,32 @@ const csvToJSON_OOPTest = async function (csvPath, jsonPath) {
 		const converter = new csvToJsonConverter();
 		const startTime = new Date().getTime();
 		let data_start = true;
-		let lineCount = 0;
 		
 		// Read the CSV file as data enters buffer.
 		readStream.on('readable', () => {		
 			let d;
 			
 			// Loop while data exists in buffer.
-			while (null !== (d = readStream.read())) {			
+			while (null !== (d = readStream.read())) {
+				let json;
+			
 				// Grab Headers and initialize Converter Object.
 				if (data_start) {
-					let headers = d.toString().split('\n').shift().split(',');
+					let headers = d.toString().split('\n')[0].split(',');
 					converter.setHeaders(headers);
 					data_start = false;
+					
+					json = converter.parseData(d, 1);
+				} else {
+					json = converter.parseData(d);
 				}
 				
-				let json = converter.parseData(d);
-				
 				// Write to JSON file.
-				writeStream.write(JSON.stringify(json), (err) => {
-					if (err) console.log(err);
-				});
+				if (json) {
+					writeStream.write(json, (err) => {
+						if (err) console.log(err);
+					});
+				}
 			}
 		});
 
@@ -221,6 +240,7 @@ const csvToJSON_OOPTest = async function (csvPath, jsonPath) {
 		readStream.on('end', () => {
 			const endTime = new Date().getTime();
 			const processTime = endTime - startTime;
+			const lineCount = converter.getLineCount();
 			console.log(`\nThe operation has completed, and a JSON file has been written to ${jsonPath}.`);
 			console.log(`${lineCount} lines were processed over ${processTime} milliseconds.`);
 			
