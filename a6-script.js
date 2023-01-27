@@ -13,8 +13,8 @@ const rl = require('readline').createInterface({ input: process.stdin, output: p
  * Contains methods for converting CSV files to JSON output.
  */
 class csvToJsonConverter {
-	// Set up converter by passing Header values
-	constructor (headers) {
+	// Set up converter by passing Header values.
+	constructor(headers) {
 		if (!this.headers) this.headers = headers;
 	}
 	
@@ -53,9 +53,14 @@ class csvToJsonConverter {
 		return json;
 	}
 	
-	// Return Header values
+	// Set Header values.
+	setHeaders(deaders) {
+		this.headers = headers;
+	}
+	
+	// Return Header values.
 	getHeaders() {
-		return this.headers
+		return this.headers;
 	}
 }
 
@@ -78,7 +83,7 @@ const csvToJSON = async function (csvPath, jsonPath) {
 	try {
 		// Initialize
 		const readStream = fs.createReadStream(csvPath);
-		const writeStream = fs.createWriteStream(jsonPath);
+		const writeStream = fs.createWriteStream(jsonPath);		
 		const startTime = new Date().getTime();
 		let data_start = true;
 		let headers, overflow;
@@ -165,5 +170,81 @@ const csvToJSON = async function (csvPath, jsonPath) {
 	}
 }
 
+/**
+ * @function csvToJson_OOPTest
+ * Converts a CSV file to a file containing JSON data.
+ * @param {string} csvPath - the path to the source CSV file
+ * @param {string} jsonPath - the path at which JSON data should be output
+ * If csvPath or jsonPath are not provided via parameters, the user will be prompted to input them.
+ * @requires fs
+ * @requires readline
+ */
+const csvToJSON_OOPTest = async function (csvPath, jsonPath) {
+	// Prompt user for file paths if they are not passed into the function.
+	if (!csvPath)
+		csvPath = await new Promise(cp => { rl.question('\nPlease provide a link or file path to your CSV file:  ', cp)});
+	if (!jsonPath)
+		jsonPath = await new Promise(jp => { rl.question('\nPlease provide a file path or file name to store the converted JSON data:  ', jp)});
+	
+	try {
+		// Initialize
+		const readStream = fs.createReadStream(csvPath);
+		const writeStream = fs.createWriteStream(jsonPath);
+		const converter = new csvToJsonConverter();
+		const startTime = new Date().getTime();
+		let data_start = true;
+		let lineCount = 0;
+		
+		// Read the CSV file as data enters buffer.
+		readStream.on('readable', () => {		
+			let d;
+			
+			// Loop while data exists in buffer.
+			while (null !== (d = readStream.read())) {			
+				// Grab Headers and initialize Converter Object.
+				if (data_start) {
+					let headers = d.toString().split('\n').shift().split(',');
+					converter.setHeaders(headers);
+					data_start = false;
+				}
+				
+				let json = converter.parseData(d);
+				
+				// Write to JSON file.
+				writeStream.write(JSON.stringify(json), (err) => {
+					if (err) console.log(err);
+				});
+			}
+		});
+
+		// End gracefully.
+		readStream.on('end', () => {
+			const endTime = new Date().getTime();
+			const processTime = endTime - startTime;
+			console.log(`\nThe operation has completed, and a JSON file has been written to ${jsonPath}.`);
+			console.log(`${lineCount} lines were processed over ${processTime} milliseconds.`);
+			
+			process.exit(0);
+		});
+
+		// Log Errors
+		// (end not-so-gracefully)
+		readStream.on('error', e => {
+			console.log(e);
+			console.log("\nLooks like that didn't go quite according to plan...");
+			process.exit(1);
+		});
+		writeStream.on('error', e => {
+			console.log(e);
+			console.log("\nLooks like that didn't go quite according to plan...");
+			process.exit(1);
+		});
+	} catch (e) {
+		console.log(e); 
+		console.log("\nLooks like that didn't go quite according to plan...");
+		process.exit(1);
+	}
+}
+
 // Run script.
-csvToJSON();
+csvToJSON_OOPTest();
