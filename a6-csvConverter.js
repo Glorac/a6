@@ -72,6 +72,49 @@ class CsvConverter {
 		
 		return jsonString;
 	}
+	
+	// Parse data in XML format.
+	toXML(data, skipRows, startOrEnd) {
+		// If Headers have not been set, return null.
+		if (!this.headers) return null;
+		
+		// Set row skip default.
+		if (!skipRows) skipRows = 0;
+	
+		// Initialize objects to hold formatted data.
+		let xml = '';
+		
+		// Seperate rows.
+		let rows = data.toString().split('\n');
+		
+		// Loop through rows, converting data to JSON.
+		for (let i = skipRows; i < rows.length; i++) {
+			// Check for overflow data from previous chunk and reset overflow.
+			if (this.overflow) {
+				rows[i] = this.overflow + rows[i];
+				this.overflow = null;
+			}
+		
+			// Grab comma-separated values and validate against headers.
+			let values = rows[i].split(',');
+			if (values.length == this.headers.length) {
+				xml += '<entry>';
+			
+				// Loop through columns.
+				for (let j = 0; j < this.headers.length; j++) {
+					xml += `<${this.headers[j]}>${values[j]}</${this.headers[j]}>`;
+				}
+				
+				xml += '</entry>';
+				this.lineCount++;
+			} else {
+				// Store overflow data for the next chunk.
+				this.overflow = rows[i];
+			}
+		}
+		
+		return xml;
+	}
 }
 
 module.exports = CsvConverter;
