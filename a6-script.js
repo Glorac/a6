@@ -7,7 +7,7 @@
 // Load relevant modules.
 const fs = require('fs');
 const rl = require('readline').createInterface({ input: process.stdin, output: process.stdout });
-const csvConverter = require('./a6-csvConverter')
+const csvConverter = require('a6-csvConverter')
 
 /**
  * @function csvToJson
