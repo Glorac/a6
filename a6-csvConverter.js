@@ -31,7 +31,7 @@ class CsvConverter {
 		return this.lineCount;
 	}
 	
-	// Parse data in JSON format.
+	// Convert data to JSON format.
 	toJSON(data, skipRows) {
 		// If Headers have not been set, return null.
 		if (!this.headers) return null;
@@ -73,8 +73,8 @@ class CsvConverter {
 		return jsonString;
 	}
 	
-	// Parse data in XML format.
-	toXML(data, skipRows, startOrEnd) {
+	// Convert data to XML format.
+	toXML(data, skipRows) {
 		// If Headers have not been set, return null.
 		if (!this.headers) return null;
 		
@@ -114,6 +114,11 @@ class CsvConverter {
 		}
 		
 		return xml;
+	}
+	
+	// Convert data to TSV format.
+	toTSV(data) {
+		return data.toString().replaceAll(',', '\t');
 	}
 }
 
