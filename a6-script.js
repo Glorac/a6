@@ -1,3 +1,9 @@
+/**
+ * a6-script.js
+ * @author: @MatthewEckart
+ * @description: A script that converts a CSV file into JSON format.
+ */
+
 // Load relevant modules.
 const fs = require('fs');
 const rl = require('readline').createInterface({ input: process.stdin, output: process.stdout });
@@ -10,7 +16,7 @@ const rl = require('readline').createInterface({ input: process.stdin, output: p
  * If csvPath or jsonPath are not provided via parameters, the user will be prompted to input them.
  * @requires fs
  * @requires readline
-*/
+ */
 const csvToJSON = async function (csvPath, jsonPath) {
 	// Prompt user for file paths if they are not passed into the function.
 	if (!csvPath)
