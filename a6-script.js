@@ -9,6 +9,57 @@ const fs = require('fs');
 const rl = require('readline').createInterface({ input: process.stdin, output: process.stdout });
 
 /**
+ * @class csvToJsonConverter
+ * Contains methods for converting CSV files to JSON output.
+ */
+class csvToJsonConverter {
+	// Set up converter by passing Header values
+	constructor (headers) {
+		if (!this.headers) this.headers = headers;
+	}
+	
+	// Parse data as it is passed.
+	parseData(data) {
+		// Initialize object to hold formatted data.
+		let json = {};
+		
+		// Seperate rows.
+		let rows = d.toString().split('\n');
+		
+		// Loop through rows, converting data to JSON.
+		for (let i = 0; i < rows.length; i++) {		
+			// Check for overflow data from previous chunk and reset overflow.
+			if (this.overflow) {
+				rows[i] = this.overflow + rows[i];
+				this.overflow = null;
+			}
+		
+			// Grab comma-separated values and validate against headers.
+			let values = rows[i].split(',');
+			if (values.length == this.headers.length) {				
+				// Loop through columns.
+				for (let j = 0; j < this.headers.length; j++) {
+					json[this.headers[j]] = values[j];
+					if (!values[j] || values[j] == '') console.log(rows[i]);
+				}
+				
+				lineCount++;
+			} else {
+				// Store overflow data for the next chunk.
+				this.overflow = rows[i];
+			}
+		}
+		
+		return json;
+	}
+	
+	// Return Header values
+	getHeaders() {
+		return this.headers
+	}
+}
+
+/**
  * @function csvToJson
  * Converts a CSV file to a file containing JSON data.
  * @param {string} csvPath - the path to the source CSV file
